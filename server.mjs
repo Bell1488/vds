@@ -38,6 +38,31 @@ if(SOCKS_PROXY){
   }
 }
 
+function telegramRequest(method, payload){
+  return new Promise((resolve,reject)=>{
+    const body=JSON.stringify(payload||{});
+    const req=https.request(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/${method}`,{
+      method:'POST',
+      agent:telegramAgent||undefined,
+      headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(body)},
+      timeout:8000
+    },res=>{
+      const chunks=[];
+      res.on('data',chunk=>chunks.push(chunk));
+      res.on('end',()=>{
+        const text=Buffer.concat(chunks).toString('utf8');
+        let data;
+        try{data=JSON.parse(text)}catch{ return reject(new Error(`telegram_invalid_response_${res.statusCode}`)) }
+        if(res.statusCode<200||res.statusCode>=300||!data.ok) return reject(new Error(`telegram_${res.statusCode||'error'}`));
+        resolve(data);
+      });
+    });
+    req.on('timeout',()=>req.destroy(new Error('telegram_timeout')));
+    req.on('error',reject);
+    req.end(body);
+  });
+}
+
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data))};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -99,19 +124,8 @@ async function deliverLead(data){
       data.page?`Страница: ${esc(data.page)}`:null,
     ].filter(Boolean).join('\n');
 
-    const fetchOptions={
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({chat_id:chat,text:lines,parse_mode:'HTML',disable_web_page_preview:true}),
-      signal:AbortSignal.timeout(8000)
-    };
-
-    // Use SOCKS5 proxy if configured
-    if(telegramAgent) fetchOptions.agent=telegramAgent;
-
     tasks.push(
-      fetch(`https://api.telegram.org/bot${token}/sendMessage`,fetchOptions)
-        .then(r=>{if(!r.ok)throw new Error(`telegram_${r.status}`)})
+      telegramRequest('sendMessage',{chat_id:chat,text:lines,parse_mode:'HTML',disable_web_page_preview:true})
     );
   }
   if(!tasks.length) throw new Error('lead_destination_not_configured');

@@ -51,7 +51,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/ssh -D 1080 -N -p $SSH_PORT -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no $SSH_USER@$FOREIGN_HOST
+ExecStart=/usr/bin/ssh -D 1080 -N -p $SSH_PORT -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=60 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=no $SSH_USER@$FOREIGN_HOST
 Restart=always
 RestartSec=10
 

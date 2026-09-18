@@ -13,42 +13,15 @@
 - ✅ Готовые конфигурации для PM2 и Nginx
 - ✅ Автоматический деплой на VPS
 
-## Быстрый старт
+## Деплой
 
-```bash
-# Клонируйте репозиторий
-git clone <repo-url>
-cd vds-logistic-site
-
-# Запустите автоматический деплой
-chmod +x deploy.sh
-sudo ./deploy.sh
-
-# Настройте SOCKS5 прокси для Telegram (для РФ)
-chmod +x setup-ssh-tunnel.sh
-sudo ./setup-ssh-tunnel.sh
-
-# Настройте .env файл
-nano .env
-
-# Протестируйте Telegram
-node test-telegram.mjs
-
-# Готово!
-```
-
-## Документация
-
-- **[QUICK_START.md](QUICK_START.md)** - Быстрый старт за 30 минут
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)** - Полное руководство по деплою
-- **[SOCKS5_PROXY_SETUP.md](SOCKS5_PROXY_SETUP.md)** - Настройка прокси для Telegram в РФ
-- **[DEPLOY.md](DEPLOY.md)** - Оригинальная документация проекта
+Полная и единственная инструкция: **[DEPLOY.md](DEPLOY.md)**.
 
 ## Файлы конфигурации
 
 - `server.mjs` - Node.js сервер
 - `ecosystem.config.cjs` - PM2 конфигурация
-- `nginx.conf` - Nginx конфигурация с SSL
+- `nginx.conf` - начальная Nginx-конфигурация; HTTPS добавляет Certbot
 - `.env.example` - Пример переменных окружения
 - `deploy.sh` - Автоматический скрипт деплоя
 - `setup-ssh-tunnel.sh` - Настройка SSH туннеля для SOCKS5
@@ -76,7 +49,7 @@ LEAD_WEBHOOK_URL=https://...       # Webhook для CRM (опционально)
 - Node.js 20+
 - Ubuntu 20.04+ или Debian 11+
 - Nginx (для production)
-- SOCKS5 прокси (для работы с Telegram в РФ)
+- SOCKS5 прокси (если Telegram API недоступен с VPS)
 
 ## Локальная разработка
 
@@ -95,17 +68,12 @@ npm start
 http://localhost:8080
 ```
 
-## Production деплой
-
-См. [QUICK_START.md](QUICK_START.md) для пошаговой инструкции.
-
 ## Поддержка
 
 При возникновении проблем:
-1. Проверьте логи: `pm2 logs vds-logistic`
-2. Проверьте статус прокси: `systemctl status telegram-tunnel`
-3. Протестируйте Telegram: `node test-telegram.mjs`
-4. См. раздел Troubleshooting в документации
+1. Откройте раздел «Диагностика» в [DEPLOY.md](DEPLOY.md)
+2. Проверьте логи: `sudo -u deploy pm2 logs vds-logistic`
+3. Проверьте приложение: `curl http://127.0.0.1:8080/api/health`
 
 ## Лицензия
 

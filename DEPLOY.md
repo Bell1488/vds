@@ -1,28 +1,188 @@
-# VDS Logistic — production deployment
+# Деплой VDS Logistic на VPS
 
-## Quick start
-1. Install Node.js 20+.
-2. Copy `.env.example` to `.env`.
-3. Configure `YANDEX_METRIKA_ID` and at least one lead destination (`LEAD_WEBHOOK_URL` or Telegram bot/chat).
-4. Run:
+Единственная рабочая схема для Ubuntu 22.04/24.04 или Debian 12: Node.js 20, PM2, Nginx и Let's Encrypt. Команды выполняются на сервере приложения под `root`.
+
+## Что нужно заранее
+
+- VPS с публичным IPv4 и доступом `ssh root@SERVER_IP`.
+- Git-репозиторий проекта и URL домена.
+- DNS: A-записи домена и `www` должны указывать на IP этого VPS **до запуска Certbot**.
+- Для заявок: либо `LEAD_WEBHOOK_URL`, либо Telegram (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`).
+- Если сервер в РФ и используется Telegram, нужен рабочий SOCKS5-прокси.
+
+## 1. Загрузить проект
+
+Подключитесь к VPS и замените `<REPO_URL>` на настоящий URL репозитория:
 
 ```bash
-npm start
+ssh root@SERVER_IP
+apt update && apt install -y git
+mkdir -p /var/www
+git clone <REPO_URL> /var/www/vds-logistic
+cd /var/www/vds-logistic
 ```
 
-The server serves the complete site and exposes:
-- `POST /api/lead` — lead intake for all site forms.
-- `GET /api/rates` — Bank of Russia USD/CNY reference rates with a short cache.
-- `GET /api/health` — health check.
+Если проект уже загружен, используйте только `cd /var/www/vds-logistic`.
 
-## Yandex Direct / Metrika events
-Primary optimization goal: `lead_success`.
-Supporting funnel events: `lead_open`, `lead_start`, `lead_submit`, `service_click`, `payment_calc_use`, `payment_service_select`, `payment_calc_submit`.
+## 2. Установить приложение и Nginx
 
-`lead_success` fires only after `/api/lead` returns HTTP 2xx, so a failed CRM/Telegram delivery is not counted as a successful lead.
+Запустите готовый скрипт из корня проекта:
 
-## Before launch
-- Replace placeholder legal/contact information with the real VDS-Восточный company details.
-- Confirm the final domain and update canonical URLs if it differs from `vds-logistic.cc`.
-- Configure HTTPS through Nginx/Caddy/hosting proxy.
-- Set real commercial payment terms. The calculator deliberately uses Bank of Russia as a reference and does not pretend it is the final client rate.
+```bash
+chmod +x deploy.sh
+sudo ./deploy.sh
+```
+
+Скрипт ставит Node.js 20+, PM2, Nginx, Certbot, создаёт пользователя `deploy`, устанавливает зависимости и запускает приложение на `127.0.0.1:8080`. Он намеренно **не получает SSL-сертификат**: сначала нужно настроить `.env` и DNS.
+
+## 3. Заполнить `.env`
+
+Откройте файл:
+
+```bash
+nano /var/www/vds-logistic/.env
+```
+
+Минимальная конфигурация Telegram:
+
+```env
+PORT=8080
+TELEGRAM_BOT_TOKEN=123456789:your_bot_token
+TELEGRAM_CHAT_ID=123456789
+SOCKS5_PROXY=socks5h://127.0.0.1:1080
+YANDEX_METRIKA_ID=
+LEAD_WEBHOOK_URL=
+```
+
+Можно использовать только CRM/webhook:
+
+```env
+LEAD_WEBHOOK_URL=https://example.com/lead-webhook
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+SOCKS5_PROXY=
+```
+
+После изменения `.env` перезапустите приложение от имени `deploy`:
+
+```bash
+cd /var/www/vds-logistic
+sudo -u deploy pm2 restart vds-logistic --update-env
+sudo -u deploy pm2 save
+```
+
+## 4. Если нужен SOCKS5 через иностранный VPS
+
+На сервере приложения должен работать SSH-доступ по ключу к иностранному VPS. Запустите:
+
+```bash
+cd /var/www/vds-logistic
+chmod +x setup-ssh-tunnel.sh
+./setup-ssh-tunnel.sh
+```
+
+Скрипт создаст systemd-сервис `telegram-tunnel` и локальный SOCKS5 на `127.0.0.1:1080`. Проверьте его до запуска теста:
+
+```bash
+systemctl status telegram-tunnel --no-pager
+curl --proxy socks5h://127.0.0.1:1080 --max-time 10 https://api.telegram.org
+```
+
+В `.env` должен быть ровно такой адрес:
+
+```env
+SOCKS5_PROXY=socks5h://127.0.0.1:1080
+```
+
+## 5. Проверить Telegram и приложение
+
+```bash
+cd /var/www/vds-logistic
+node test-telegram.mjs
+curl http://127.0.0.1:8080/api/health
+```
+
+Ожидаемый health-ответ: `{"ok":true,"service":"vds-logistic"}`. Тест Telegram отправляет одно тестовое сообщение, если указан `TELEGRAM_CHAT_ID`.
+
+## 6. Включить автозапуск PM2
+
+Выполните команду и запустите команду, которую PM2 напечатает в ответе:
+
+```bash
+pm2 startup systemd -u deploy --hp /home/deploy
+sudo -u deploy pm2 save
+```
+
+Проверка:
+
+```bash
+sudo -u deploy pm2 status
+systemctl status pm2-deploy --no-pager
+```
+
+## 7. Включить HTTPS
+
+Сначала проверьте DNS и доступность HTTP:
+
+```bash
+getent hosts vds-logistic.cc www.vds-logistic.cc
+curl -I http://vds-logistic.cc
+```
+
+Затем получите сертификат:
+
+```bash
+certbot --nginx -d vds-logistic.cc -d www.vds-logistic.cc
+nginx -t
+systemctl reload nginx
+```
+
+После этого сайт должен открываться по `https://vds-logistic.cc`.
+
+## 8. Финальная проверка
+
+```bash
+curl https://vds-logistic.cc/api/health
+curl https://vds-logistic.cc/api/rates
+sudo -u deploy pm2 logs vds-logistic --lines 50
+```
+
+Отправьте тестовую заявку с сайта и убедитесь, что она пришла в Telegram или CRM.
+
+## Обновление проекта
+
+```bash
+cd /var/www/vds-logistic
+git pull --ff-only
+sudo -u deploy npm ci --omit=dev
+sudo -u deploy pm2 restart vds-logistic --update-env
+sudo -u deploy pm2 save
+```
+
+## Диагностика
+
+**Сайт отдаёт 502:**
+
+```bash
+sudo -u deploy pm2 status
+curl http://127.0.0.1:8080/api/health
+tail -n 100 /var/log/nginx/vds-logistic-error.log
+```
+
+**Заявка не отправляется:**
+
+```bash
+sudo -u deploy pm2 logs vds-logistic --err --lines 100
+systemctl status telegram-tunnel --no-pager
+node /var/www/vds-logistic/test-telegram.mjs
+```
+
+**Nginx/SSL не запускается:**
+
+```bash
+nginx -t
+certbot certificates
+systemctl status nginx --no-pager
+```
+
+Не запускайте `certbot` до того, как DNS указывает на этот VPS. Не открывайте порт `8080` наружу: приложение должно быть доступно только через Nginx.

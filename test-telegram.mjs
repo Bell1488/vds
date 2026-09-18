@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {SocksProxyAgent} from 'socks-proxy-agent';
+import https from 'node:https';
 import {readFileSync, existsSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -40,11 +41,12 @@ if (!CHAT_ID) {
 console.log(`Using proxy: ${SOCKS_PROXY || 'NONE (direct connection)'}`);
 console.log('');
 
-// Setup proxy if configured
-const fetchOptions = {};
+// Setup proxy if configured. Native fetch does not understand Node's `agent`
+// option, so use https.request below for SOCKS5 connections.
+let proxyAgent;
 if (SOCKS_PROXY) {
   try {
-    fetchOptions.agent = new SocksProxyAgent(SOCKS_PROXY);
+    proxyAgent = new SocksProxyAgent(SOCKS_PROXY);
     console.log('✓ SOCKS5 proxy agent initialized');
   } catch (error) {
     console.error('❌ Failed to initialize proxy:', error.message);
@@ -52,20 +54,37 @@ if (SOCKS_PROXY) {
   }
 }
 
+function telegramRequest(method, payload = {}) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const request = https.request(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
+      method: 'POST',
+      agent: proxyAgent,
+      headers: {'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body)},
+      timeout: 10000
+    }, response => {
+      const chunks = [];
+      response.on('data', chunk => chunks.push(chunk));
+      response.on('end', () => {
+        const text = Buffer.concat(chunks).toString('utf8');
+        let data;
+        try { data = JSON.parse(text); } catch { return reject(new Error(`Invalid response (${response.statusCode})`)); }
+        if (response.statusCode < 200 || response.statusCode >= 300 || !data.ok) {
+          return reject(new Error(`Telegram HTTP ${response.statusCode}: ${data.description || 'request failed'}`));
+        }
+        resolve(data);
+      });
+    });
+    request.on('timeout', () => request.destroy(new Error('Request timed out')));
+    request.on('error', reject);
+    request.end(body);
+  });
+}
+
 // Test 1: Get bot info
 console.log('\n--- Test 1: Get Bot Info ---');
 try {
-  const response = await fetch(
-    `https://api.telegram.org/bot${BOT_TOKEN}/getMe`,
-    {...fetchOptions, signal: AbortSignal.timeout(10000)}
-  );
-
-  if (!response.ok) {
-    console.error(`❌ HTTP ${response.status}: ${response.statusText}`);
-    process.exit(1);
-  }
-
-  const data = await response.json();
+  const data = await telegramRequest('getMe');
 
   if (data.ok) {
     console.log('✅ Bot is accessible!');
@@ -96,29 +115,11 @@ if (CHAT_ID) {
       'This is a test message to verify Telegram integration.\n' +
       `Time: ${new Date().toISOString()}`;
 
-    const response = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
-      {
-        ...fetchOptions,
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          chat_id: CHAT_ID,
-          text: message,
-          parse_mode: 'HTML'
-        }),
-        signal: AbortSignal.timeout(10000)
-      }
-    );
-
-    if (!response.ok) {
-      console.error(`❌ HTTP ${response.status}: ${response.statusText}`);
-      const text = await response.text();
-      console.error('   Response:', text);
-      process.exit(1);
-    }
-
-    const data = await response.json();
+    const data = await telegramRequest('sendMessage', {
+      chat_id: CHAT_ID,
+      text: message,
+      parse_mode: 'HTML'
+    });
 
     if (data.ok) {
       console.log('✅ Test message sent successfully!');
