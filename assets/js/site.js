@@ -22,7 +22,7 @@
   const openModal=(source='unknown')=>{
     if(!modal)return;
     modal.classList.add('open');document.body.classList.add('menu-open');modal.dataset.source=source;
-    const isPayment=source==='topup_calculator' && window.VDSPaymentLead;
+    const isPayment=window.VDSPaymentLead && (source==='topup_calculator' || document.body.dataset.page==='payment');
     logisticsFields.forEach(el=>el.hidden=!!isPayment);
     if(isPayment){
       if(modalTitle) modalTitle.textContent='Заявка на пополнение';
@@ -70,7 +70,7 @@
       if(!form.reportValidity()) return;
       VDS.goal('lead_submit',{form:form.dataset.form||'lead'});
       submit.disabled=true; if(status){status.className='form-status';status.textContent='Отправляем заявку…'}
-      const data=Object.fromEntries(new FormData(form).entries()); data.page=location.href; data.source=modal?.classList.contains('open')?modal.dataset.source:'page_form'; if(data.source==='topup_calculator' && window.VDSPaymentLead){data.lead_type='payment';data.payment=window.VDSPaymentLead}
+      const data=Object.fromEntries(new FormData(form).entries()); data.page=location.href; data.source=modal?.classList.contains('open')?modal.dataset.source:'page_form'; const isPaymentLead=window.VDSPaymentLead && (data.source==='topup_calculator' || document.body.dataset.page==='payment'); if(isPaymentLead){data.lead_type='payment';data.payment=window.VDSPaymentLead}
       try{
         const endpoint=form.dataset.endpoint||'/api/lead';
         const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});

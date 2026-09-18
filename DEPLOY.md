@@ -153,7 +153,7 @@ sudo -u deploy pm2 logs vds-logistic --lines 50
 
 ```bash
 cd /var/www/vds-logistic
-git pull --ff-only
+sudo -u deploy git -C /var/www/vds-logistic pull --ff-only
 sudo -u deploy npm ci --omit=dev
 sudo -u deploy pm2 restart vds-logistic --update-env
 sudo -u deploy pm2 save
@@ -174,6 +174,40 @@ tail -n 100 /var/log/nginx/vds-logistic-error.log
 ```bash
 sudo -u deploy pm2 logs vds-logistic --err --lines 100
 systemctl status telegram-tunnel --no-pager
+node /var/www/vds-logistic/test-telegram.mjs
+```
+
+Если тест возвращает `Telegram HTTP 400: ... chat not found`, токен и прокси уже работают, но в `TELEGRAM_CHAT_ID` указан не тот чат. Получите ID заново:
+
+1. Для личного чата откройте диалог с ботом и отправьте ему `/start`.
+2. Для группы добавьте бота в группу и отправьте в ней сообщение (бот должен иметь право видеть сообщения).
+3. Для канала добавьте бота администратором и опубликуйте сообщение.
+4. Выполните на сервере, подставив токен из `.env`:
+
+```bash
+TOKEN="$(sed -n 's/^TELEGRAM_BOT_TOKEN=//p' /var/www/vds-logistic/.env)"
+PROXY="$(sed -n 's/^SOCKS5_PROXY=//p' /var/www/vds-logistic/.env)"
+curl --proxy "$PROXY" \
+  "https://api.telegram.org/bot${TOKEN}/getUpdates"
+```
+
+В JSON найдите `message.chat.id` или `channel_post.chat.id`. Для группы/канала ID обычно отрицательный и начинается с `-100`. Запишите это число в `.env`:
+
+```env
+TELEGRAM_CHAT_ID=-1001234567890
+```
+
+Если `result` пустой, у бота может быть установлен webhook. Удалите его и повторите отправку сообщения:
+
+```bash
+curl --proxy "$PROXY" \
+  "https://api.telegram.org/bot${TOKEN}/deleteWebhook?drop_pending_updates=false"
+```
+
+После изменения ID перезапустите приложение и повторите тест:
+
+```bash
+sudo -u deploy pm2 restart vds-logistic --update-env
 node /var/www/vds-logistic/test-telegram.mjs
 ```
 
