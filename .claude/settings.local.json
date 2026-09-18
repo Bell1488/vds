@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\(\\\\.md|\\\\.sh|\\\\.mjs|\\\\.cjs\\)$\")",
+      "Bash(grep -E \"\\(\\\\.md|\\\\.sh|\\\\.mjs|\\\\.cjs|\\\\.conf|\\\\.json|\\\\.example|\\\\.gitignore\\)$\")",
+      "Bash(awk '{print $9, \"\\(\"$5\"\\)\"}')"
+    ]
+  }
+}

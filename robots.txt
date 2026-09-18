@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://vds-logistic.cc/sitemap.xml
+Host: vds-logistic.cc
