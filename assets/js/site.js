@@ -76,6 +76,7 @@
         const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         if(!r.ok) throw new Error('request_failed');
         VDS.goal('lead_success',{form:form.dataset.form||'lead'});
+        if(isPaymentLead) window.location.assign('https://t.me/VDS_Logistic_Support');
         if(status){status.className='form-status success';status.textContent='Заявка отправлена. Мы свяжемся с вами по указанному контакту.'}
         form.reset(); closeModal(); showToast('Заявка отправлена. Спасибо!');
       }catch(err){
