@@ -19,6 +19,18 @@
   const modalForm=modal?.querySelector('.lead-form');
   const logisticsFields=modalForm ? ['from','to','cargo'].map(n=>modalForm.elements[n]?.closest('.field')).filter(Boolean) : [];
   const modalSubmit=modalForm?.querySelector('button[type="submit"]');
+  const paymentSuccessModal=document.createElement('div');
+  paymentSuccessModal.className='modal payment-success-modal';
+  paymentSuccessModal.setAttribute('aria-labelledby','payment-success-title');
+  paymentSuccessModal.setAttribute('aria-modal','true');
+  paymentSuccessModal.setAttribute('role','dialog');
+  paymentSuccessModal.innerHTML='<div class="modal-card payment-success-card"><button aria-label="Закрыть" class="close payment-success-close" type="button">&times;</button><div class="payment-success-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"></path></svg></div><div class="payment-success-kicker">Заявка отправлена</div><h3 id="payment-success-title">Спасибо! Данные получены.</h3><p>Менеджер уже получил вашу заявку на обмен. Вы можете сразу написать ему в Telegram.</p><a class="btn primary payment-success-action" href="https://t.me/VDS_Logistic_Support" rel="noopener noreferrer" target="_blank">Перейти в чат с менеджером &rarr;</a></div>';
+  document.body.appendChild(paymentSuccessModal);
+  const closePaymentSuccess=()=>{paymentSuccessModal.classList.remove('open');document.body.classList.remove('menu-open')};
+  const showPaymentSuccess=()=>{closeModal();paymentSuccessModal.classList.add('open');document.body.classList.add('menu-open');setTimeout(()=>paymentSuccessModal.querySelector('.payment-success-action')?.focus(),120)};
+  paymentSuccessModal.querySelector('.payment-success-close')?.addEventListener('click',closePaymentSuccess);
+  paymentSuccessModal.addEventListener('click',e=>{if(e.target===paymentSuccessModal)closePaymentSuccess()});
+  addEventListener('keydown',e=>{if(e.key==='Escape')closePaymentSuccess()});
   const openModal=(source='unknown')=>{
     if(!modal)return;
     modal.classList.add('open');document.body.classList.add('menu-open');modal.dataset.source=source;
@@ -76,9 +88,8 @@
         const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
         if(!r.ok) throw new Error('request_failed');
         VDS.goal('lead_success',{form:form.dataset.form||'lead'});
-        if(isPaymentLead) window.location.assign('https://t.me/VDS_Logistic_Support');
         if(status){status.className='form-status success';status.textContent='Заявка отправлена. Мы свяжемся с вами по указанному контакту.'}
-        form.reset(); closeModal(); showToast('Заявка отправлена. Спасибо!');
+        form.reset(); closeModal(); if(isPaymentLead) showPaymentSuccess(); else showToast('Заявка отправлена. Спасибо!');
       }catch(err){
         if(status){status.className='form-status error';status.textContent='Не удалось отправить заявку. Пожалуйста, повторите попытку позже.'}
       }finally{submit.disabled=false}
