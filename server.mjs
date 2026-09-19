@@ -117,6 +117,7 @@ async function deliverLead(data){
       data.to?`Куда: ${esc(data.to)}`:null,
       data.cargo?`Груз: ${esc(data.cargo)}`:null,
       p.summary?`Платёж: ${esc(p.summary)}`:null,
+      data.payment_comment?`Дополнительная информация: ${esc(data.payment_comment)}`:null,
       data.utm_source?`UTM source: ${esc(data.utm_source)}`:null,
       data.utm_campaign?`UTM campaign: ${esc(data.utm_campaign)}`:null,
       data.utm_term?`UTM term: ${esc(data.utm_term)}`:null,
