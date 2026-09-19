@@ -354,3 +354,15 @@ body.menu-open .floating-lead{opacity:0!important;pointer-events:none!important}
 @media(max-width:1020px){.service-benefit-grid{grid-template-columns:1fr 1fr}.service-benefit:last-child{grid-column:1/-1}.service-flow{grid-template-columns:1fr 1fr}.service-end-grid{grid-template-columns:1fr;gap:38px}}
 @media(max-width:680px){.service-detail-section{padding-top:76px}.service-benefit-grid,.service-flow{grid-template-columns:1fr}.service-benefit:last-child{grid-column:auto}.service-benefit{min-height:190px}.service-flow-head{display:block}.flow-item{min-height:190px}.service-end-grid{gap:28px}.service-faq{padding:21px}.service-end-grid h2{font-size:37px}}
 .not-found{min-height:100svh;display:grid;place-items:center;padding:80px 0;background:radial-gradient(700px 420px at 50% 30%,rgba(221,180,59,.07),transparent 70%),#070806}.not-found-inner{text-align:center;display:grid;justify-items:center}.not-found .brand{margin-bottom:50px}.not-found-code{font-size:12px;letter-spacing:.28em;color:#c99e2c;text-transform:uppercase}.not-found h1{font-size:clamp(48px,7vw,90px);max-width:800px;margin:18px 0;color:#f3ead3}.not-found p{color:#9b9485;font-size:17px}.not-found .hero-actions{justify-content:center}
+
+/* Homepage flow: surface the payment calculator immediately after the Hero. */
+main:has(> .hero){display:flex;flex-direction:column}
+main:has(> .hero) > .hero{order:1}
+main:has(> .hero) > .payment-section{order:2}
+main:has(> .hero) > .trust-strip{order:3}
+main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
+
+.hero-telegram{display:inline-flex;align-items:center;justify-content:center;gap:9px;margin:0 auto 4px;min-height:42px;padding:0 16px;border:1px solid rgba(221,180,59,.22);border-radius:12px;background:rgba(221,180,59,.055);color:#e9d99e;font-size:13px;font-weight:750;text-decoration:none;transition:.2s}
+.hero-telegram svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.hero-telegram:hover{border-color:rgba(221,180,59,.48);background:rgba(221,180,59,.11);color:#fff1bd;transform:translateY(-2px)}
+@media(max-width:680px){.hero-telegram{width:100%;margin-bottom:3px}}
