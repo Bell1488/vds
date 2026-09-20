@@ -1,5 +1,6 @@
 import http from 'node:http';
 import https from 'node:https';
+import crypto from 'node:crypto';
 import {readFile, stat} from 'node:fs/promises';
 import {existsSync, readFileSync} from 'node:fs';
 import path from 'node:path';
@@ -25,6 +26,7 @@ const METRIKA_ID=(process.env.YANDEX_METRIKA_ID||'').replace(/\D/g,'');
 const MAX_BODY=32*1024;
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.ico':'image/x-icon','.webmanifest':'application/manifest+json; charset=utf-8'};
 let rateCache={expires:0,data:null};
+const acceptedLeads=new Map();
 
 // SOCKS5 proxy setup for Telegram in Russia
 const SOCKS_PROXY=process.env.SOCKS5_PROXY; // e.g., socks5h://127.0.0.1:1080
@@ -87,16 +89,15 @@ function extractRate(xml,code){
 
 async function getRates(){
   const now=Date.now(); if(rateCache.data&&rateCache.expires>now) return rateCache.data;
-  const fallback={RUB:1,CNY:12.5457,USD:84.1732,updated:'17.09.2026',source:'Банк России · резервный курс'};
   try{
     const r=await fetch('https://www.cbr.ru/scripts/XML_daily.asp',{headers:{'User-Agent':'VDS-Logistic/1.0'},signal:AbortSignal.timeout(5000)});
     if(!r.ok) throw new Error(`cbr_${r.status}`);
     const xml=await r.text(); const usd=extractRate(xml,'USD'), cny=extractRate(xml,'CNY');
     if(!(usd>0&&cny>0)) throw new Error('rates_missing');
     const date=xml.match(/Date="([^"]+)"/)?.[1]||'сегодня';
-    const data={RUB:1,CNY:cny,USD:usd,updated:date,source:'Банк России'};
+    const data={ok:true,available:true,RUB:1,CNY:cny,USD:usd,updated:date,source:'Банк России',rate_type:'reference'};
     rateCache={expires:now+4*60*60*1000,data}; return data;
-  }catch(e){rateCache={expires:now+15*60*1000,data:fallback};return fallback}
+  }catch(e){const unavailable={ok:false,available:false,rate_type:'reference',source:'Справочный курс временно недоступен'};rateCache={expires:now+5*60*1000,data:unavailable};return unavailable}
 }
 
 async function deliverLead(data){
@@ -116,6 +117,8 @@ async function deliverLead(data){
       data.from?`Откуда: ${esc(data.from)}`:null,
       data.to?`Куда: ${esc(data.to)}`:null,
       data.cargo?`Груз: ${esc(data.cargo)}`:null,
+      p.payment_type?`Тип платежа: ${esc(p.payment_type)}`:null,
+      p.amount_cny?`Сумма поставщику: ${esc(p.amount_cny)} CNY`:null,
       p.summary?`Платёж: ${esc(p.summary)}`:null,
       data.payment_comment?`Дополнительная информация: ${esc(data.payment_comment)}`:null,
       data.utm_source?`UTM source: ${esc(data.utm_source)}`:null,
@@ -131,6 +134,10 @@ async function deliverLead(data){
   }
   if(!tasks.length) throw new Error('lead_destination_not_configured');
   await Promise.all(tasks);
+}
+
+function acceptedResponse(leadId){
+  return {ok:true,accepted:true,lead_id:leadId};
 }
 
 async function serveStatic(req,res,url){
@@ -157,10 +164,27 @@ const server=http.createServer(async(req,res)=>{
     if(req.method==='GET'&&url.pathname==='/api/rates') return json(res,200,await getRates());
     if(req.method==='POST'&&url.pathname==='/api/lead'){
       const data=await readJson(req);
-      if(data.website) return json(res,200,{ok:true}); // honeypot: silently accept bots
-      if(!String(data.name||'').trim()||!String(data.contact||'').trim()) return json(res,422,{ok:false,error:'name_and_contact_required'});
-      await deliverLead({...data,received_at:new Date().toISOString()});
-      return json(res,200,{ok:true});
+      if(data.website) return json(res,200,{ok:true,accepted:false}); // honeypot: do not count as a lead
+      if(!String(data.contact||'').trim()) return json(res,422,{ok:false,error:'contact_required'});
+      const paymentTypes=new Set(['supplier','alipay','wechat','card','consultation']);
+      const hasPaymentFields=Boolean(data.payment||data.payment_type||data.payment_amount_cny);
+      if(hasPaymentFields) data.lead_type='payment';
+      if(data.lead_type==='payment'){
+        const paymentType=String(data.payment_type||data.payment?.payment_type||'').trim();
+        const amount=String(data.payment_amount_cny??data.payment?.amount_cny??'').trim();
+        if(!paymentTypes.has(paymentType)) return json(res,422,{ok:false,error:'payment_type_required'});
+        if(paymentType!=='consultation'&&!(Number(amount)>0)) return json(res,422,{ok:false,error:'payment_amount_required'});
+        data.payment={...(data.payment&&typeof data.payment==='object'?data.payment:{}),payment_type:paymentType,amount_cny:paymentType==='consultation'?null:Number(amount)};
+      }
+      const requestId=String(data.client_request_id||'').trim().slice(0,100);
+      if(requestId&&acceptedLeads.has(requestId)) return json(res,200,acceptedResponse(acceptedLeads.get(requestId)));
+      const leadId=crypto.randomUUID();
+      await deliverLead({...data,lead_id:leadId,received_at:new Date().toISOString()});
+      if(requestId){
+        acceptedLeads.set(requestId,leadId);
+        setTimeout(()=>acceptedLeads.delete(requestId),30*60*1000).unref?.();
+      }
+      return json(res,200,acceptedResponse(leadId));
     }
     if(req.method==='GET'||req.method==='HEAD'){
       if(await serveStatic(req,res,url)) return;
