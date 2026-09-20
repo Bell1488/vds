@@ -19,6 +19,16 @@
   const closePaymentSuccess=()=>{paymentSuccessModal.classList.remove('open');document.body.classList.remove('menu-open')};
   const closeModal=()=>{modal?.classList.remove('open');document.body.classList.remove('menu-open')};
   const showPaymentSuccess=()=>{closeModal();paymentSuccessModal.classList.add('open');document.body.classList.add('menu-open')};
+  const focusFirstRequired=form=>{
+    if(!form)return;
+    const type=form.elements.payment_type, amount=form.elements.payment_amount_cny;
+    if(type&&amount){
+      if(!String(type.value||'').trim()){type.focus();return}
+      if(type.value!=='consultation'&&!String(amount.value||'').trim()){amount.focus();return}
+    }
+    const required=[...form.querySelectorAll('input,select,textarea')].find(el=>el.required&&((el.type==='checkbox'&&!el.checked)||!String(el.value||'').trim()));
+    if(required){required.focus();return}
+  };
   paymentSuccessModal.querySelector('.payment-success-close')?.addEventListener('click',closePaymentSuccess);
   paymentSuccessModal.addEventListener('click',e=>{if(e.target===paymentSuccessModal)closePaymentSuccess()});
   const openModal=(source='unknown')=>{
@@ -28,7 +38,7 @@
     logisticsFields.forEach(el=>el.hidden=isPayment); paymentFields.forEach(el=>el.hidden=!isPayment);
     const status=modalForm?.querySelector('.form-status'); if(status){status.className='form-status';status.textContent=''}
     if(isPayment){
-      if(modalTitle)modalTitle.textContent='Запросить итоговую сумму в RUB';
+      if(modalTitle)modalTitle.textContent='Получить расчёт платежа';
       if(modalKicker)modalKicker.textContent='Оплата поставщику в Китае';
       if(modalSubmit)modalSubmit.textContent='Получить расчёт платежа';
       const calc=source==='topup_calculator'&&window.VDSPaymentLead?.confirmed?window.VDSPaymentLead:null;
@@ -38,7 +48,7 @@
       if(modalTitle)modalTitle.textContent='Расскажите о грузе'; if(modalKicker)modalKicker.textContent='Расчёт маршрута'; if(modalSubmit)modalSubmit.textContent='Получить расчёт маршрута ↗';
       if(leadContext){leadContext.hidden=true;leadContext.textContent=''}
     }
-    VDS.goal('lead_open',{source}); setTimeout(()=>$('#modal-name')?.focus(),120);
+    VDS.goal('lead_open',{source}); setTimeout(()=>focusFirstRequired(modalForm),120);
   };
   $$('[data-lead-open]').forEach(b=>b.addEventListener('click',()=>openModal(b.dataset.leadOpen||'cta')));
   $$('[data-close]').forEach(b=>b.addEventListener('click',closeModal)); modal?.addEventListener('click',e=>{if(e.target===modal)closeModal()});
