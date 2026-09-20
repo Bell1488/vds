@@ -23,6 +23,7 @@ if(existsSync(envPath)){
 
 const PORT=Number(process.env.PORT||8080);
 const METRIKA_ID=(process.env.YANDEX_METRIKA_ID||'').replace(/\D/g,'');
+const ASSET_VERSION='20260920-2';
 const MAX_BODY=32*1024;
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.ico':'image/x-icon','.webmanifest':'application/manifest+json; charset=utf-8'};
 let rateCache={expires:0,data:null};
@@ -150,7 +151,12 @@ async function serveStatic(req,res,url){
   try{
     const st=await stat(full); if(!st.isFile()) return false;
     const ext=path.extname(full).toLowerCase(); let body=await readFile(full);
-    if(ext==='.html'&&METRIKA_ID){body=Buffer.from(body.toString('utf8').replace(/data-metrika-id="[^"]*"/g,`data-metrika-id="${METRIKA_ID}"`))}
+    if(ext==='.html'){
+      let html=body.toString('utf8');
+      if(METRIKA_ID) html=html.replace(/data-metrika-id="[^"]*"/g,`data-metrika-id="${METRIKA_ID}"`);
+      html=html.replace(/(assets\/(?:css\/site\.css|js\/metrika\.js|js\/site\.js))(?:\?[^"']*)?(["'])/g,`$1?v=${ASSET_VERSION}$2`);
+      body=Buffer.from(html);
+    }
     const headers={'Content-Type':mime[ext]||'application/octet-stream','X-Content-Type-Options':'nosniff','Referrer-Policy':'strict-origin-when-cross-origin'};
     if(ext==='.html') headers['Cache-Control']='no-cache'; else if(pathname.startsWith('/assets/')) headers['Cache-Control']='public, max-age=86400';
     res.writeHead(200,headers);res.end(body);return true;

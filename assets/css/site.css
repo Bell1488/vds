@@ -390,4 +390,8 @@ main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
 .hero-telegram{display:inline-flex;align-items:center;justify-content:center;gap:9px;margin:0 auto 4px;min-height:42px;padding:0 16px;border:1px solid rgba(221,180,59,.22);border-radius:12px;background:rgba(221,180,59,.055);color:#e9d99e;font-size:13px;font-weight:750;text-decoration:none;transition:.2s}
 .hero-telegram svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .hero-telegram:hover{border-color:rgba(221,180,59,.48);background:rgba(221,180,59,.11);color:#fff1bd;transform:translateY(-2px)}
+.payment-page-hero .hero-actions{justify-content:flex-start;align-items:center}
+.payment-page-hero .hero-actions .btn{flex:0 0 auto}
+.payment-page-hero .hero-telegram{display:flex;width:max-content;margin-left:0;margin-right:0}
 @media(max-width:680px){.hero-telegram{width:100%;margin-bottom:3px}}
+@media(max-width:680px){.payment-page-hero .hero-actions{flex-direction:column;align-items:stretch}.payment-page-hero .hero-actions .btn{width:100%}.payment-page-hero .hero-telegram{width:100%}}
