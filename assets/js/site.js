@@ -14,7 +14,7 @@
   const logisticsFields=modalForm?[...['from','to','cargo'].map(n=>modalForm.elements[n]?.closest('.field')).filter(Boolean)]:[];
   const paymentFields=modalForm?[...modalForm.querySelectorAll('[data-payment-field]')]:[];
   const paymentSuccessModal=document.createElement('div'); paymentSuccessModal.className='modal payment-success-modal'; paymentSuccessModal.setAttribute('aria-modal','true'); paymentSuccessModal.setAttribute('role','dialog');
-  paymentSuccessModal.innerHTML='<div class="modal-card payment-success-card"><button aria-label="Закрыть" class="close payment-success-close" type="button">&times;</button><div class="payment-success-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"></path></svg></div><div class="payment-success-kicker">Заявка принята</div><h3 id="payment-success-title">Заявка принята.</h3><p>Заявка принята. Мы свяжемся с вами по указанному контакту.</p><a class="btn primary payment-success-action" href="https://t.me/VDS_Logistic_Support" rel="noopener noreferrer" target="_blank">Написать менеджеру в Telegram →</a></div>';
+  paymentSuccessModal.innerHTML='<div class="modal-card payment-success-card"><button aria-label="Закрыть" class="close payment-success-close" type="button">&times;</button><div class="payment-success-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12 4.2 4.2L19 6.5"></path></svg></div><div class="payment-success-kicker">Заявка принята</div><h3 id="payment-success-title">Заявка принята.</h3><p>Заявка принята. Мы свяжемся с вами по указанному контакту.</p><a class="btn primary payment-success-action" href="https://t.me/+PjrujI-2RSQxNWRi" rel="noopener noreferrer" target="_blank">Написать менеджеру в Telegram →</a></div>';
   document.body.appendChild(paymentSuccessModal);
   const closePaymentSuccess=()=>{paymentSuccessModal.classList.remove('open');document.body.classList.remove('menu-open')};
   const closeModal=()=>{modal?.classList.remove('open');document.body.classList.remove('menu-open')};
@@ -79,7 +79,7 @@
         if(!r.ok||result?.ok!==true||result.accepted!==true||typeof result.lead_id!=='string'||!result.lead_id)throw new Error('lead_not_accepted');
         if(form.dataset.successLeadId!==result.lead_id){form.dataset.successLeadId=result.lead_id;VDS.goal('lead_success',{form:form.dataset.form||'lead',lead_type:isPayment?'payment':'logistics'});if(isPayment)VDS.goal('payment_lead_success',{form:form.dataset.form||'lead',lead_type:'payment'})}
         if(status){status.className='form-status success';status.textContent='Заявка принята. Мы свяжемся с вами по указанному контакту.'} form.reset(); attribution.forEach(k=>{if(form.elements[k])form.elements[k].value=storage.get('vds_'+k)}); form.dataset.requestId=''; closeModal(); if(isPayment)showPaymentSuccess(); else showToast('Заявка принята. Мы свяжемся с вами по указанному контакту.');
-      }catch(err){if(status){status.className='form-status error';status.innerHTML='Не удалось подтвердить приём заявки. Проверьте соединение и повторите попытку или <a href="https://t.me/VDS_Logistic_Support" target="_blank" rel="noopener noreferrer">напишите менеджеру в Telegram</a>.'}}
+      }catch(err){if(status){status.className='form-status error';status.innerHTML='Не удалось подтвердить приём заявки. Проверьте соединение и повторите попытку или <a href="https://t.me/+PjrujI-2RSQxNWRi" target="_blank" rel="noopener noreferrer">напишите менеджеру в Telegram</a>.'}}
       finally{submit.disabled=false}
     });
   });
