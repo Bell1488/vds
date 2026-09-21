@@ -395,3 +395,48 @@ main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
 .payment-page-hero .hero-telegram{display:flex;width:max-content;margin-left:0;margin-right:0}
 @media(max-width:680px){.hero-telegram{width:100%;margin-bottom:3px}}
 @media(max-width:680px){.payment-page-hero .hero-actions{flex-direction:column;align-items:stretch}.payment-page-hero .hero-actions .btn{width:100%}.payment-page-hero .hero-telegram{width:100%}}
+
+/* Payment page: keep every content track inside the viewport on narrow screens. */
+.payment-page-hero{
+  isolation:isolate;
+  background-image:linear-gradient(90deg,rgba(7,8,6,.94) 0%,rgba(7,8,6,.72) 52%,rgba(7,8,6,.38) 100%),url('../img/back.png');
+  background-position:center,center;
+  background-size:cover,cover;
+  background-repeat:no-repeat;
+}
+.payment-page-hero .container,
+.payment-page-hero .page-hero-grid,
+.payment-page-hero .page-hero-grid>div,
+.payment-section .container,
+.payment-section .section-head,
+.exchange-shell,
+.exchange-main,
+.exchange-summary,
+.company-details .container{min-width:0}
+.payment-page-hero h1,
+.payment-page-hero p,
+.payment-page-hero .mini-list span,
+.exchange-summary p,
+.exchange-facts b,
+.company-details-grid strong{overflow-wrap:anywhere;word-break:break-word}
+.service-tab{max-width:100%;white-space:normal}
+
+@media(max-width:680px){
+  .payment-page-hero{
+    padding-top:120px;
+    background-image:linear-gradient(180deg,rgba(7,8,6,.72),rgba(7,8,6,.86) 58%,#070806 100%),url('../img/back.png');
+    background-position:center,64% center;
+    background-size:cover,auto 100%;
+  }
+  .payment-page-hero h1{font-size:clamp(38px,11vw,50px)}
+  .payment-page-hero p{font-size:16px;line-height:1.58}
+  .payment-page-hero .hero-actions{gap:9px}
+  .payment-page-hero .hero-actions .btn{min-width:0;padding-inline:14px}
+  .exchange-main,.exchange-summary{padding:20px 16px}
+  .exchange-control{grid-template-columns:minmax(0,1fr)}
+  .exchange-control input{font-size:29px}
+  .service-tabs{display:grid;grid-template-columns:1fr 1fr}
+  .service-tab{min-height:44px;padding-inline:9px}
+  .exchange-label{align-items:flex-start;flex-wrap:wrap;gap:5px}
+  .company-details-grid>div{min-width:0}
+}
