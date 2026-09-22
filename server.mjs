@@ -23,7 +23,7 @@ if(existsSync(envPath)){
 
 const PORT=Number(process.env.PORT||8080);
 const METRIKA_ID=(process.env.YANDEX_METRIKA_ID||'').replace(/\D/g,'');
-const ASSET_VERSION='20260920-2';
+const ASSET_VERSION='20260922-1';
 const MAX_BODY=32*1024;
 const mime={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.json':'application/json; charset=utf-8','.xml':'application/xml; charset=utf-8','.txt':'text/plain; charset=utf-8','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.ico':'image/x-icon','.webmanifest':'application/manifest+json; charset=utf-8'};
 let rateCache={expires:0,data:null};
