@@ -456,11 +456,12 @@ main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
 .hero-proof span:before{content:'✓';color:#e6bd43;font-weight:800}
 .hero-proof b{color:#f0e2ba;font-weight:800}
 .payment-trust{position:relative;z-index:2;border-top:1px solid rgba(223,183,63,.11);border-bottom:1px solid rgba(223,183,63,.11);background:#0b0c09}
-.payment-trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.payment-trust-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0}
 .payment-trust-grid>div{display:grid;gap:6px;min-height:108px;padding:23px 24px;border-left:1px solid rgba(223,183,63,.10)}
 .payment-trust-grid>div:first-child{border-left:0}
 .payment-trust strong{color:#eee2be;font-size:15px}
 .payment-trust span{color:#8e8879;font-size:12px;line-height:1.45}
+.payment-trust-promo{margin:8px;border:1px solid rgba(223,183,63,.3)!important;border-radius:8px;background:rgba(223,183,63,.08)}
 .payment-section .section-head h2{max-width:760px}
 .exchange-summary .calc-badge{color:#efd072;border-color:rgba(223,183,63,.22);background:rgba(223,183,63,.07)}
 .exchange-summary h3{font-size:27px}
@@ -471,11 +472,15 @@ main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
   .payment-trust-grid>div:nth-child(4){border-top:1px solid rgba(223,183,63,.10)}
 }
 @media(max-width:680px){
+  .payment-page-hero{padding-top:88px}
+  .payment-page-hero .eyebrow{display:none}
   .payment-page-hero p{font-size:16px}
   .hero-proof{display:grid;gap:8px;margin-top:17px}
-  .payment-trust-grid{grid-template-columns:1fr}
-  .payment-trust-grid>div,.payment-trust-grid>div:nth-child(3),.payment-trust-grid>div:nth-child(4){min-height:0;padding:16px 0;border-left:0;border-top:1px solid rgba(223,183,63,.10)}
-  .payment-trust-grid>div:first-child{border-top:0}
+  .payment-trust{padding:12px 0;border:0;background:transparent}
+  .payment-trust-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding:6px;border:1px solid rgba(223,183,63,.2);border-radius:14px;background:#0b0c09}
+  .payment-trust-grid>div,.payment-trust-grid>div:nth-child(3),.payment-trust-grid>div:nth-child(4),.payment-trust-grid>div:nth-child(5){min-height:0;padding:10px 8px;border:0}
+  .payment-trust-grid>div:nth-child(n+3):not(.payment-trust-promo){border-top:1px solid rgba(223,183,63,.10)}
+  .payment-trust-grid>div.payment-trust-promo{grid-column:1/-1;margin:6px 0 0;padding:11px;border:1px solid rgba(223,183,63,.3)!important;border-radius:10px;background:rgba(223,183,63,.08)}
   .mini-card h3{font-size:22px}
   .payment-page-hero .mini-card{display:none}
 }
