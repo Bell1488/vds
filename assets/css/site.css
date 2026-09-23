@@ -394,8 +394,9 @@ main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
 .payment-page-hero .hero-actions{justify-content:flex-start;align-items:center}
 .payment-page-hero .hero-actions .btn{flex:0 0 auto}
 .payment-page-hero .hero-telegram{display:flex;width:max-content;margin-left:0;margin-right:0}
+.payment-page-hero .hero-contact-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 @media(max-width:680px){.hero-telegram{width:100%;margin-bottom:3px}}
-@media(max-width:680px){.payment-page-hero .hero-actions{flex-direction:column;align-items:stretch}.payment-page-hero .hero-actions .btn{width:100%}.payment-page-hero .hero-telegram{width:100%}}
+@media(max-width:680px){.payment-page-hero .hero-actions{flex-direction:column;align-items:stretch}.payment-page-hero .hero-actions .btn{width:100%}.payment-page-hero .hero-contact-actions{width:100%;flex-direction:column;align-items:stretch}.payment-page-hero .hero-telegram{width:100%}}
 
 /* Payment page: keep every content track inside the viewport on narrow screens. */
 .payment-page-hero{
@@ -476,6 +477,7 @@ main:has(> .hero) > :not(.hero):not(.payment-section):not(.trust-strip){order:4}
   .payment-trust-grid>div,.payment-trust-grid>div:nth-child(3),.payment-trust-grid>div:nth-child(4){min-height:0;padding:16px 0;border-left:0;border-top:1px solid rgba(223,183,63,.10)}
   .payment-trust-grid>div:first-child{border-top:0}
   .mini-card h3{font-size:22px}
+  .payment-page-hero .mini-card{display:none}
 }
 
 /* Keep the payment page lighter and easier to scan without changing the shared theme. */
@@ -488,34 +490,4 @@ body[data-page="payment"] .service-benefit p,
 body[data-page="payment"] .step p,
 body[data-page="payment"] .faq-a p{color:#b5ad9d}
 body[data-page="payment"] .lead-form button[type="submit"]{font-size:0}
-body[data-page="payment"] .rates-widget{position:relative;padding:28px 0 20px;background:#0a0c09;border-top:1px solid rgba(223,183,63,.12);border-bottom:1px solid rgba(223,183,63,.12)}
-body[data-page="payment"] .rates-widget .container{min-width:0}
-body[data-page="payment"] .rates-widget-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:17px}
-body[data-page="payment"] .rates-widget .kicker{margin-bottom:7px;color:#d8ae38;font-size:10px;letter-spacing:.14em}
-body[data-page="payment"] .rates-widget h2{margin:0;color:#f5ecd8;font-size:clamp(22px,2.5vw,30px);letter-spacing:-.035em}
-body[data-page="payment"] .rates-widget-head p{max-width:680px;margin:8px 0 0;color:#948d7e;font-size:12px;line-height:1.5}
-body[data-page="payment"] .rates-updated{display:flex;align-items:center;gap:8px;flex:0 0 auto;color:#aaa294;font-size:11px;white-space:nowrap}
-body[data-page="payment"] .rates-live-dot{width:7px;height:7px;border-radius:50%;background:#53c99b;box-shadow:0 0 0 4px rgba(83,201,155,.1)}
-body[data-page="payment"] .rates-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-body[data-page="payment"] .rate-card{min-width:0;padding:16px 18px;border:1px solid rgba(223,183,63,.14);border-radius:13px;background:#11130f}
-body[data-page="payment"] .rate-card-title{display:flex;align-items:center;gap:10px;min-width:0}
-body[data-page="payment"] .rate-card-title img{width:30px;height:21px;object-fit:cover;border-radius:3px;flex:0 0 auto}
-body[data-page="payment"] .rate-card-title>div{display:grid;gap:3px;min-width:0}
-body[data-page="payment"] .rate-card-title strong{overflow:hidden;color:#f0e4c5;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
-body[data-page="payment"] .rate-card-title span:not(.rate-currency-icon){color:#8d877a;font-size:10px;letter-spacing:.08em}
-body[data-page="payment"] .rate-currency-icon{display:grid;place-items:center;width:30px;height:21px;border:1px solid rgba(223,183,63,.24);border-radius:3px;color:#e5bd43;font-size:16px;font-weight:700}
-body[data-page="payment"] .rate-value{display:flex;align-items:baseline;gap:6px;margin-top:16px}
-body[data-page="payment"] .rate-value strong{color:#fff1c5;font-size:25px;letter-spacing:-.035em;overflow-wrap:anywhere}
-body[data-page="payment"] .rate-value span{color:#d7b24c;font-size:13px}
-body[data-page="payment"] .rate-card p{margin:5px 0 0;color:#8d877a;font-size:10px}
-body[data-page="payment"] .rates-source{margin-top:11px;color:#726d62;font-size:10px}
-@media(max-width:680px){
-  body[data-page="payment"] .rates-widget{padding:22px 0 17px}
-  body[data-page="payment"] .rates-widget-head{display:block;margin-bottom:13px}
-  body[data-page="payment"] .rates-updated{margin-top:11px}
-  body[data-page="payment"] .rates-grid{grid-template-columns:1fr}
-  body[data-page="payment"] .rate-card{display:grid;grid-template-columns:1fr auto;align-items:center;padding:13px 15px}
-  body[data-page="payment"] .rate-value{justify-content:flex-end;margin-top:0}
-  body[data-page="payment"] .rate-card p{grid-column:1/-1;margin-top:8px}
-}
 body[data-page="payment"] .lead-form button[type="submit"]::after{content:"Получить точный расчёт";font-size:14px}
