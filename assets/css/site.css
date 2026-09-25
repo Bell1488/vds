@@ -620,6 +620,7 @@ body[data-page="payment"] .lead-form [data-payment-field] select{background:#171
   body[data-page="payment"] .payment-page-hero .hero-proof{display:grid;gap:8px;}
   body[data-page="payment"] .payment-page-hero .mini-card{display:none;max-width:none;}
   body[data-page="payment"] .payment-trust-grid{grid-template-columns:1fr;}
+  body[data-page="payment"] .payment-trust{display:none;}
   body[data-page="payment"] .payment-trust-grid>div{min-height:0;padding:13px 15px;border-left:0;border-top:1px solid rgba(223,183,63,.1);}
   body[data-page="payment"] .payment-trust-grid>div:first-child{border-top:0;}
   body[data-page="payment"] .payment-section{padding-top:62px;}
